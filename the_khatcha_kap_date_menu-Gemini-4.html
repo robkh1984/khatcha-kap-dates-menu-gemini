@@ -1,0 +1,1958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>The Khatcha-Kap Date Menu — 100 Curated Expeditions</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Typography: Inter, Plus Jakarta Sans, Playfair Display & Space Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Leaflet.js Mapping Engine -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <style>
+    :root {
+      --bg-canvas: #09090B;
+      --slide-bg: #141416;
+      --card-dark: #18181C;
+      --card-inner: #202026;
+      --card-border: #27272A;
+      --card-border-light: #3F3F46;
+      --accent-terracotta: #D97746;
+      --accent-hover: #E88958;
+      --pin-crimson: #C23B2B;
+      --pin-highlight: #EF4444;
+      --text-white: #FFFFFF;
+      --text-body: #E4E4E7;
+      --text-muted: #A1A1AA;
+      --green-check: #10B981;
+      --natalie-gold: #F59E0B;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-serif: 'Playfair Display', Georgia, serif;
+      --font-mono: 'Space Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background-color: var(--bg-canvas);
+      color: var(--text-body);
+      font-family: var(--font-sans);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Presenter Top Control Bar */
+    .presenter-bar {
+      height: 52px;
+      background: #141417;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      z-index: 1000;
+      flex-shrink: 0;
+      gap: 12px;
+    }
+    .presenter-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .brand-title {
+      color: #FFF;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      font-size: 11.5px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+    }
+    .brand-title i { color: var(--accent-terracotta); font-size: 14px; }
+    
+    .presenter-center-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      justify-content: center;
+      max-width: 650px;
+    }
+    .category-filter-select, .jump-selector {
+      background: #1F1F24;
+      color: #FFF;
+      border: 1px solid var(--card-border-light);
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 5px 8px;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+    .category-filter-select:focus, .jump-selector:focus {
+      border-color: var(--accent-terracotta);
+    }
+    .category-filter-select { max-width: 180px; }
+    .jump-selector { flex: 1; max-width: 280px; }
+
+    .presenter-right-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .deck-btn {
+      background: #232328;
+      border: 1px solid var(--card-border-light);
+      color: #FFF;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .deck-btn:hover {
+      background: var(--accent-terracotta);
+      border-color: var(--accent-terracotta);
+      color: #FFF;
+    }
+    .deck-btn.accent-active {
+      background: var(--accent-terracotta);
+      border-color: var(--accent-terracotta);
+    }
+    .slide-indicator {
+      color: var(--accent-terracotta);
+      font-weight: 700;
+      min-width: 90px;
+      text-align: center;
+      font-size: 11px;
+    }
+
+    /* Presentation Stage Viewport */
+    .deck-stage-wrapper {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 16px;
+      overflow: hidden;
+      position: relative;
+    }
+    .slide-frame {
+      width: 100%;
+      max-width: 1220px;
+      aspect-ratio: 16 / 9;
+      max-height: 100%;
+      background: var(--slide-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.85);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Fullscreen Overrides */
+    body.is-fullscreen {
+      padding: 0;
+      margin: 0;
+    }
+    body.is-fullscreen .deck-stage-wrapper {
+      padding: 0;
+      width: 100vw;
+      height: calc(100vh - 52px);
+    }
+    body.is-fullscreen .slide-frame {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 0;
+      border: none;
+    }
+
+    /* Slide Header Topbar */
+    .slide-topbar {
+      height: 38px;
+      background: #18181C;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .slide-topbar strong { color: var(--accent-terracotta); }
+
+    /* Split Grid Structure (50/50 Balance) */
+    .slide-split-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      overflow: hidden;
+      position: relative;
+    }
+    .slide-split-grid.single-panel {
+      grid-template-columns: 1fr;
+    }
+
+    /* Content Column */
+    .slide-text-col {
+      padding: 16px 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: var(--slide-bg);
+      overflow-y: auto;
+      gap: 7px;
+    }
+    .pkg-kicker {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      color: var(--accent-terracotta);
+      letter-spacing: 1px;
+      font-weight: 700;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pkg-heading {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-white);
+      line-height: 1.2;
+      margin: 1px 0;
+    }
+    .pkg-location-strip {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .pkg-location-strip a {
+      color: var(--accent-terracotta);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .gmaps-direct-btn {
+      background: #27272E;
+      border: 1px solid var(--accent-terracotta);
+      color: #FFFFFF;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 2.5px 8px;
+      border-radius: 4px;
+      text-decoration: none !important;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+    .gmaps-direct-btn:hover {
+      background: var(--accent-terracotta);
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(217, 119, 70, 0.4);
+    }
+
+    /* Itinerary Step Card Block */
+    .itin-card-block {
+      background: var(--card-dark);
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 7px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .itin-time-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 11px;
+      line-height: 1.45;
+      color: var(--text-body);
+      padding: 3px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border-left: 2px solid transparent;
+    }
+    .itin-time-row:hover, .itin-time-row.active-hover {
+      background: rgba(217, 119, 70, 0.14);
+      border-left-color: var(--accent-terracotta);
+      transform: translateX(2px);
+    }
+    .itin-time-badge {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--accent-terracotta);
+      min-width: 58px;
+      flex-shrink: 0;
+      padding-top: 1px;
+    }
+    .itin-time-desc { flex: 1; }
+    .itin-stop-title { font-weight: 700; color: #FFFFFF; margin-right: 4px; }
+    
+    .natalie-choice-pill {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid var(--natalie-gold);
+      color: var(--natalie-gold);
+      font-family: var(--font-mono);
+      font-size: 8.5px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 3px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    .pin-badge {
+      width: 20px;
+      height: 20px;
+      min-width: 20px;
+      border-radius: 50%;
+      background: var(--pin-crimson);
+      color: #FFFFFF;
+      font-family: var(--font-sans);
+      font-weight: 800;
+      font-size: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid #FFFFFF;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+    .pin-badge.toc-pin {
+      width: 22px;
+      height: 22px;
+      min-width: 22px;
+      font-size: 9.5px;
+    }
+
+    /* 3-Tier Accommodations Block */
+    .accomm-card-block {
+      background: #17171B;
+      border: 1px solid var(--card-border);
+      border-radius: 5px;
+      padding: 6px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      font-size: 9.5px;
+      line-height: 1.4;
+    }
+    .accomm-label {
+      font-family: var(--font-mono);
+      font-size: 8.5px;
+      color: var(--accent-terracotta);
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Attire & Essentials Block */
+    .packing-cheat-block {
+      font-size: 9.5px;
+      color: var(--text-muted);
+      border-left: 2px solid var(--accent-terracotta);
+      padding: 5px 10px;
+      line-height: 1.45;
+      background: rgba(217,119,70,0.06);
+      border-radius: 0 4px 4px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .packing-cheat-block strong { color: #E4E4E7; font-style: normal; }
+
+    /* Media Column (Upper Photo + Lower Leaflet Google Maps Viewport) */
+    .slide-media-col {
+      position: relative;
+      background: #111;
+      height: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .photo-split-half {
+      height: 48%;
+      position: relative;
+      overflow: hidden;
+      background: #0E0E10;
+    }
+    .photo-split-half img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      filter: brightness(0.95) contrast(1.05);
+    }
+    .photo-caption-bar {
+      position: absolute;
+      bottom: 6px;
+      left: 8px;
+      right: 8px;
+      background: rgba(20, 20, 22, 0.88);
+      backdrop-filter: blur(8px);
+      padding: 5px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--card-border);
+      font-size: 9.5px;
+      color: var(--text-white);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 15;
+    }
+
+    .map-split-half {
+      position: relative;
+      width: 100%;
+      height: 52%;
+      border-top: 1px solid var(--card-border);
+      overflow: hidden;
+      background: #E5E3DF;
+    }
+    .leaflet-viewport-main {
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* Floating Corner Inset Locator Box */
+    .osm-floating-inset-box {
+      position: absolute;
+      bottom: 6px;
+      left: 6px;
+      width: 130px;
+      height: 85px;
+      background: #FFFFFF;
+      border: 2px solid #FFFFFF;
+      border-radius: 4px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.65);
+      overflow: hidden;
+      z-index: 1000;
+    }
+    .leaflet-viewport-inset {
+      width: 100%;
+      height: 100%;
+    }
+
+    .map-layer-switcher {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      z-index: 1000;
+      display: flex;
+      background: rgba(20, 20, 24, 0.9);
+      border: 1px solid var(--card-border-light);
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+    .map-layer-btn {
+      background: transparent;
+      border: none;
+      color: #A1A1AA;
+      font-family: var(--font-mono);
+      font-size: 8.5px;
+      font-weight: 700;
+      padding: 3px 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .map-layer-btn:hover, .map-layer-btn.active {
+      background: var(--accent-terracotta);
+      color: #FFFFFF;
+    }
+
+    .leaflet-crimson-pin {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--pin-crimson);
+      color: #FFFFFF;
+      font-family: var(--font-sans);
+      font-weight: 800;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #FFFFFF;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.45);
+      transition: transform 0.2s ease, background 0.2s ease;
+      cursor: pointer;
+    }
+    .leaflet-crimson-pin.active-highlight, .leaflet-crimson-pin:hover {
+      background: var(--pin-highlight);
+      transform: scale(1.22);
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.9);
+      z-index: 1000 !important;
+    }
+
+    .osm-clean-tooltip {
+      background: #18181C !important;
+      color: #FFFFFF !important;
+      border: 1px solid #3F3F46 !important;
+      border-radius: 4px !important;
+      font-family: var(--font-sans) !important;
+      font-size: 10px !important;
+      padding: 3px 7px !important;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.6) !important;
+      white-space: nowrap !important;
+    }
+    .osm-clean-tooltip::before { border-top-color: #3F3F46 !important; }
+
+    .city-callout-badge {
+      display: flex;
+      align-items: center;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .city-callout-badge.dir-right { flex-direction: row; }
+    .city-callout-badge.dir-left { flex-direction: row-reverse; }
+    .city-callout-badge.dir-top { flex-direction: column-reverse; align-items: center; }
+    .city-callout-badge.dir-bottom { flex-direction: column; align-items: center; }
+
+    .city-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #111827;
+      border: 1px solid #FFFFFF;
+      flex-shrink: 0;
+    }
+    .city-line {
+      background: #111827;
+      flex-shrink: 0;
+    }
+    .city-callout-badge.dir-right .city-line, .city-callout-badge.dir-left .city-line {
+      width: 14px;
+      height: 1.5px;
+    }
+    .city-callout-badge.dir-top .city-line, .city-callout-badge.dir-bottom .city-line {
+      width: 1.5px;
+      height: 12px;
+    }
+    .city-pill {
+      background: #FFFFFF;
+      color: #111827;
+      font-family: var(--font-sans);
+      font-weight: 800;
+      font-size: 9.5px;
+      border: 1.4px solid #111827;
+      border-radius: 3px;
+      padding: 1px 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      line-height: 1.2;
+    }
+
+    /* TOC Single-Line Rows */
+    .toc-table-flow {
+      display: flex;
+      flex-direction: column;
+      gap: 5.5px;
+      padding: 14px 18px;
+      overflow-y: auto;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .toc-clean-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6.5px 10px;
+      background: #18181C;
+      border: 1px solid #27272A;
+      border-radius: 5px;
+      color: var(--text-body);
+      font-size: 11px;
+      line-height: 1.4;
+      cursor: pointer;
+      box-sizing: border-box;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+    .toc-clean-row:hover, .toc-clean-row.active-hover {
+      background: #24242C;
+      border-color: var(--accent-terracotta);
+      transform: translateX(2px);
+    }
+    .toc-left-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .toc-trip-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #FFFFFF;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .toc-venue-pill {
+      font-family: var(--font-mono);
+      font-size: 8.5px;
+      color: var(--text-muted);
+      background: #121214;
+      padding: 2px 5px;
+      border-radius: 3px;
+      border: 1px solid #27272A;
+      flex-shrink: 0;
+    }
+    .toc-green-done {
+      color: var(--green-check);
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    /* Multi-Panel TOC Container */
+    .toc-multipanel-osm-container {
+      display: grid;
+      grid-template-rows: 2.1fr 1fr;
+      gap: 6px;
+      height: 100%;
+      background: #18181C;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    .toc-panel-west-box {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 5px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      background: #E5E3DF;
+    }
+    .toc-panel-bottom-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      height: 100%;
+    }
+    .toc-subpanel-box {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 5px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      background: #E5E3DF;
+    }
+    .panel-black-header-pill {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      background: #000000;
+      color: #FFFFFF;
+      font-family: var(--font-sans);
+      font-weight: 800;
+      font-size: 9.5px;
+      padding: 2px 7px;
+      border-radius: 3px;
+      z-index: 1000;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+      pointer-events: none;
+    }
+
+    /* Curator Dossier Briefings */
+    .dossier-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 16px 20px;
+      background: var(--slide-bg);
+      height: 100%;
+      overflow-y: auto;
+    }
+    .dossier-card {
+      background: #18181C;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      line-height: 1.5;
+    }
+    .dossier-card-tag {
+      font-family: var(--font-mono);
+      font-size: 8.5px;
+      color: var(--accent-terracotta);
+      text-transform: uppercase;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      letter-spacing: 0.5px;
+    }
+    .dossier-card-headline {
+      font-size: 12px;
+      color: #FFFFFF;
+      font-weight: 600;
+    }
+    .dossier-card p {
+      margin-bottom: 6px;
+      line-height: 1.5;
+      color: #D4D4D8;
+      font-size: 11px;
+    }
+    .dossier-card p strong { color: #FFFFFF; }
+
+    /* Print / PDF Keepsake Book Stylesheet */
+    @media print {
+      @page {
+        size: 16in 9in landscape;
+        margin: 0;
+      }
+      body, html {
+        background: #141416 !important;
+        color: #E4E4E7 !important;
+        overflow: visible !important;
+      }
+      .presenter-bar { display: none !important; }
+      .deck-stage-wrapper {
+        padding: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+      }
+      .slide-frame {
+        max-width: 100% !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        page-break-after: always;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="presenter-bar">
+    <div class="presenter-brand">
+      <span class="brand-title" onclick="jumpToSlideKey('cover')">
+        <i class="fa-solid fa-compass"></i> The Khatcha-Kap Date Menu
+      </span>
+    </div>
+
+    <div class="presenter-center-controls">
+      <select class="category-filter-select" id="categoryFilter" onchange="applyCategoryFilter(this.value)">
+        <option value="all">All 100 Expeditions</option>
+        <option value="completed">Completed Together (✔)</option>
+        <option value="hiking">Hiking &amp; Scenic Nature</option>
+        <option value="galas">Galas, Theatre &amp; Dining</option>
+        <option value="weekend">California Weekend Rallies</option>
+        <option value="americas">The Americas &amp; Islands</option>
+        <option value="mediterranean">Mediterranean &amp; Europe</option>
+        <option value="transcontinental">3-Week Transcontinental</option>
+      </select>
+      <select class="jump-selector" id="deckJumpSelector" onchange="navigateToSlideIndex(this.value)"></select>
+    </div>
+
+    <div class="presenter-right-actions">
+      <button class="deck-btn" onclick="goToPrevSlide()"><i class="fa-solid fa-chevron-left"></i> PREV</button>
+      <span class="slide-indicator" id="slideIndexLabel">Slide 1 of 117</span>
+      <button class="deck-btn" onclick="goToNextSlide()">NEXT <i class="fa-solid fa-chevron-right"></i></button>
+      <button class="deck-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen (F)"><i class="fa-solid fa-expand"></i></button>
+      <button class="deck-btn" onclick="window.print()" title="Print Keepsake Deck"><i class="fa-solid fa-print"></i></button>
+    </div>
+  </header>
+
+  <main class="deck-stage-wrapper">
+    <div class="slide-frame" id="dynamicSlideCanvas">
+      <!-- Dynamically rendered by renderActiveSlide() -->
+    </div>
+  </main>
+
+  <script>
+    /* Complete 100-Package Expeditions Master Array */
+    const PACKAGES = [
+      // ================= TIER 1: < 1 DAY (01 - 35) =================
+      {
+        num: "01", tier: 1, tierName: "< 1 Day", category: "hiking", title: "Laguna Beach: Ridge & Reef", loc: "Crystal Cove State Park, Laguna Beach, CA", done: true,
+        center: [33.565, -117.838], zoom: 14, insetCenter: [33.60, -117.82], insetZoom: 10, bounds: [[33.548, -117.865], [33.582, -117.810]],
+        itin: [
+          { pin: 1, name: "Moro Canyon Trailhead", time: "07:30 AM", desc: "Ascend Moro Canyon, descend Moro Ridge with uninterrupted Pacific ocean panorama.", lat: 33.5612, lng: -117.8354, role: "Trail Staging" },
+          { pin: 2, name: "Moro Ridge Crest Vista", time: "09:15 AM", desc: "360-degree Pacific panorama over Catalina Island & canyon spine.", lat: 33.5746, lng: -117.8218, role: "High-Exertion Apex" },
+          { pin: 3, name: "The Beachcomber Table 21", time: "10:30 AM", desc: "Reserved sand-rail Table 21: Bloody Marys & hot beignets at menu shift.", lat: 33.5714, lng: -117.8523, role: "Culinary Anchor", isNataliesPick: true },
+          { pin: 4, name: "Reef Point Marine Rinse", time: "11:15 AM", desc: "Freshwater foot rinse at Reef Point; slide sandal & linen swap.", lat: 33.5593, lng: -117.8422, role: "Trail-to-Table Buffer" }
+        ],
+        accomm: "Half-Day Outing • 8.5 mi South of Irvine Home Base via CA-73 & Newport Coast Dr",
+        packing: { bag: "Linen Day Tote", footwear: "Trail runners (pack flat slide sandals)", layers: "Breathable morning SPF top & linen button-down" },
+        photo: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
+        geo: "CA-1 Pacific Coast Hwy & Moro Ridge Trail"
+      },
+      {
+        num: "02", tier: 1, tierName: "< 1 Day", category: "hiking", title: "Treasure Island Beach: Dawn Tidepools", loc: "Montage Laguna Beach, CA", done: false,
+        center: [33.518, -117.754], zoom: 15, insetCenter: [33.58, -117.80], insetZoom: 10, bounds: [[33.505, -117.770], [33.535, -117.735]],
+        itin: [
+          { pin: 1, name: "Montage Bluff Trailhead", time: "06:45 AM", desc: "Descend Montage bluff ramp to low-tide marine sanctuary & sea stars.", lat: 33.5184, lng: -117.7532, role: "Dawn Access" },
+          { pin: 2, name: "Goff Island Marine Arch", time: "08:30 AM", desc: "Walk north headlands toward Goff Island arch; ocean swell photography.", lat: 33.5192, lng: -117.7554, role: "Scenic Vista" },
+          { pin: 3, name: "Active Culture Terrace", time: "09:30 AM", desc: "Warm almond croissants & lavender lattes on terrace at Active Culture.", lat: 33.5221, lng: -117.7563, role: "Breakfast Anchor", isNataliesPick: true }
+        ],
+        accomm: "Morning Outing • 11 mi South of Irvine via Laguna Canyon Rd (CA-133)",
+        packing: { bag: "Waterproof Crossbody", footwear: "Slip-on water shoes (pack leather slides)", layers: "Light cotton hoodie & sun hat" },
+        photo: "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=1200&q=80",
+        geo: "CA-1 PCH & Montage Bluffs"
+      },
+      {
+        num: "03", tier: 1, tierName: "< 1 Day", category: "galas", title: "Montage Laguna Beach: Oceanic Spa Retreat", loc: "Spa Montage, Laguna Beach, CA", done: false,
+        center: [33.5175, -117.7525], zoom: 16, insetCenter: [33.58, -117.80], insetZoom: 10, bounds: [[33.510, -117.760], [33.525, -117.745]],
+        itin: [
+          { pin: 1, name: "Spa Montage Thermal Lounge", time: "10:00 AM", desc: "Eucalyptus steam room, oceanfront redwood sauna & whirlpool soak.", lat: 33.5170, lng: -117.7520, role: "Thermal Reset" },
+          { pin: 2, name: "California Wildflower Massage", time: "11:30 AM", desc: "Couples restorative 90-minute coastal botanical body work.", lat: 33.5175, lng: -117.7525, role: "Wellness Anchor" },
+          { pin: 3, name: "Mosaic Bar & Grille Patio", time: "01:30 PM", desc: "Mahi-mahi tacos, chilled ceviche & passionfruit spritz overlooking Pacific breakers.", lat: 33.5180, lng: -117.7535, role: "Seaside Lunch", isNataliesPick: true }
+        ],
+        accomm: "Day Retreat • 11 mi South of Irvine via CA-133",
+        packing: { bag: "Luxury Resort Tote", footwear: "Slide sandals & clean pedicure flats", layers: "Silk resort dress & cashmere wrap" },
+        photo: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1200&q=80",
+        geo: "Montage Bluff Promenade"
+      },
+      {
+        num: "04", tier: 1, tierName: "< 1 Day", category: "hiking", title: "Thousand Steps Beach: Secret Salt Pools", loc: "South Laguna Beach, CA", done: false,
+        center: [33.498, -117.733], zoom: 15, insetCenter: [33.54, -117.76], insetZoom: 11, bounds: [[33.490, -117.745], [33.508, -117.720]],
+        itin: [
+          { pin: 1, name: "9th Avenue Stair Descent", time: "08:15 AM", desc: "Descend 223 wooden stairs down shaded coastal cliff canopy.", lat: 33.4995, lng: -117.7315, role: "Cliff Descent" },
+          { pin: 2, name: "South Sea Cave & Pools", time: "09:00 AM", desc: "Low-tide wade into natural ocean carved saltwater cave pool.", lat: 33.4965, lng: -117.7345, role: "Coastal Discovery" },
+          { pin: 3, name: "South of Nick's Lunch", time: "11:30 AM", desc: "Chipotle sea bass skewers & house guacamole in Laguna village.", lat: 33.5420, lng: -117.7830, role: "Village Dining", isNataliesPick: true }
+        ],
+        accomm: "Half-Day Outing • 14 mi South of Irvine via CA-133 & PCH",
+        packing: { bag: "Canvas Rucksack", footwear: "Grip water shoes (stairs require dry sneakers)", layers: "Swimwear with linen shirt coverup" },
+        photo: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
+        geo: "CA-1 South Laguna Coastal Cleft"
+      },
+      {
+        num: "05", tier: 1, tierName: "< 1 Day", category: "hiking", title: "Top of the World: Alta Laguna Sunset", loc: "Alta Laguna Park, Laguna Beach, CA", done: false,
+        center: [33.559, -117.760], zoom: 14, insetCenter: [33.58, -117.79], insetZoom: 11, bounds: [[33.545, -117.780], [33.575, -117.740]],
+        itin: [
+          { pin: 1, name: "Alta Laguna Park Trailhead", time: "04:30 PM", desc: "Stage at park crest; take West Ridge Trail overlooking coastal canyons.", lat: 33.5595, lng: -117.7605, role: "Ridge Launch" },
+          { pin: 2, name: "Top of the World Benches", time: "05:45 PM", desc: "Golden hour 360-degree vista: Saddleback Mountain to San Clemente Island.", lat: 33.5620, lng: -117.7580, role: "Sunset Vista" },
+          { pin: 3, name: "Broadway by Amar Santana", time: "07:30 PM", desc: "Artisanal tapas & craft cocktails in intimate downtown dining room.", lat: 33.5435, lng: -117.7850, role: "Gastronomic Dinner", isNataliesPick: true }
+        ],
+        accomm: "Evening Outing • 9.5 mi South of Irvine via Laguna Canyon",
+        packing: { bag: "Compact Shoulder Bag", footwear: "Comfortable sneakers & ankle boots for dinner", layers: "Windbreaker for ridge; tailored evening jacket" },
+        photo: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=80",
+        geo: "Alta Laguna Ridge & West Ridge Trail"
+      },
+      {
+        num: "06", tier: 1, tierName: "< 1 Day", category: "hiking", title: "Quail Hill: Sage Scrub Dawn Loop", loc: "Quail Hill Community Park, Irvine, CA", done: true,
+        center: [33.655, -117.788], zoom: 14, insetCenter: [33.66, -117.80], insetZoom: 11, bounds: [[33.640, -117.805], [33.670, -117.770]],
+        itin: [
+          { pin: 1, name: "Quail Hill Trailhead", time: "06:30 AM", desc: "Dawn start on 2.0-mile preserve loop trail across native coastal sage scrub.", lat: 33.6548, lng: -117.7892, role: "Local Trailhead" },
+          { pin: 2, name: "Vista Point Ridgeline", time: "07:15 AM", desc: "Panoramic view over Irvine skyline & foothills; cool morning breeze.", lat: 33.6490, lng: -117.7820, role: "Scenic Highpoint" },
+          { pin: 3, name: "Poached Kitchen Breakfast", time: "08:15 AM", desc: "Avocado toast, poached eggs, house potatoes & iced vanilla matcha latte.", lat: 33.6610, lng: -117.7950, role: "Morning Fuel", isNataliesPick: true }
+        ],
+        accomm: "Morning Loop • 3.5 mi from Home Base in Irvine",
+        packing: { bag: "Running Hydration Belt", footwear: "Light trail runners", layers: "Athletic pullover & baseball cap" },
+        photo: "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=80",
+        geo: "Irvine Open Space Preserve & Shady Canyon Rd"
+      },
+      {
+        num: "07", tier: 1, tierName: "< 1 Day", category: "hiking", title: "Shady Canyon: Twilight Sycamore Drift", loc: "Shady Canyon Trail, Irvine, CA", done: false,
+        center: [33.640, -117.810], zoom: 14, insetCenter: [33.65, -117.82], insetZoom: 11, bounds: [[33.625, -117.830], [33.655, -117.795]],
+        itin: [
+          { pin: 1, name: "Turtle Rock Nature Center", time: "05:00 PM", desc: "Stage cruiser bikes along paved sycamore-lined Shady Canyon path.", lat: 33.6480, lng: -117.8220, role: "Pathway Start" },
+          { pin: 2, name: "Sycamore Creek Overlook", time: "06:15 PM", desc: "Golden hour sunset drift past sandstone boulders & native oak groves.", lat: 33.6350, lng: -117.8050, role: "Golden Hour Drift" },
+          { pin: 3, name: "CUCINA enoteca Irvine", time: "07:30 PM", desc: "Fresh burrata, wood-fired pizza & Italian red blend on garden patio.", lat: 33.6510, lng: -117.7450, role: "Patio Supper", isNataliesPick: true }
+        ],
+        accomm: "Twilight Outing • 4.2 mi from Irvine Home Base",
+        packing: { bag: "Handlebar Tote", footwear: "Casual white leather sneakers", layers: "Merino wool knit sweater" },
+        photo: "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=1200&q=80",
+        geo: "Shady Canyon Bikeway Corridor"
+      },
+      {
+        num: "08", tier: 1, tierName: "< 1 Day", category: "hiking", title: "Upper Newport Bay: Osprey Kayak Drift", loc: "Newport Aquatic Center, Newport Beach, CA", done: false,
+        center: [33.630, -117.888], zoom: 14, insetCenter: [33.63, -117.89], insetZoom: 11, bounds: [[33.615, -117.910], [33.645, -117.865]],
+        itin: [
+          { pin: 1, name: "Newport Aquatic Center", time: "08:00 AM", desc: "Launch double kayak onto glassy Back Bay ecological reserve waters.", lat: 33.6225, lng: -117.8920, role: "Water Launch" },
+          { pin: 2, name: "Big Canyon Salt Marsh", time: "09:30 AM", desc: "Silent paddle through salt marsh channels; observe nesting osprey.", lat: 33.6350, lng: -117.8820, role: "Ecological Drift" },
+          { pin: 3, name: "Sidecar Doughnuts & Coffee", time: "11:00 AM", desc: "Warm huckleberry donuts & bourbon vanilla lattes on 17th Street.", lat: 33.6420, lng: -117.9180, role: "Morning Pastry", isNataliesPick: true }
+        ],
+        accomm: "Morning Outing • 7 mi West of Irvine via Jamboree Rd",
+        packing: { bag: "Waterproof Dry Sack", footwear: "Neoprene water booties", layers: "UV rashguard & polaroid sunglasses" },
+        photo: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80",
+        geo: "Upper Newport Bay Nature Preserve"
+      },
+      {
+        num: "09", tier: 1, tierName: "< 1 Day", category: "hiking", title: "Balboa Island: Ferry Crossing & Canals", loc: "Balboa Island, Newport Beach, CA", done: false,
+        center: [33.606, -117.893], zoom: 15, insetCenter: [33.61, -117.90], insetZoom: 11, bounds: [[33.595, -117.910], [33.618, -117.875]],
+        itin: [
+          { pin: 1, name: "Marine Avenue Promenade", time: "02:30 PM", desc: "Browse coastal boutiques & French market stalls along Marine Avenue.", lat: 33.6080, lng: -117.8900, role: "Island Village" },
+          { pin: 2, name: "Historic Balboa Island Ferry", time: "04:00 PM", desc: "Board 3-car open ferry across channel to Balboa Peninsula boardwalk.", lat: 33.6045, lng: -117.8985, role: "Historic Crossing" },
+          { pin: 3, name: "Dad's Original Frozen Banana", time: "05:15 PM", desc: "Chocolate-dipped frozen banana rolled in toasted coconut flakes.", lat: 33.6075, lng: -117.8915, role: "Iconic Treat", isNataliesPick: true }
+        ],
+        accomm: "Afternoon Stroll • 8.5 mi West of Irvine via MacArthur Blvd",
+        packing: { bag: "Crossbody Straw Bag", footwear: "Espadrille sandals", layers: "Breezy linen sundress & oversized sunglasses" },
+        photo: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
+        geo: "Balboa Island Boardwalk & Grand Canal"
+      },
+      {
+        num: "10", tier: 1, tierName: "< 1 Day", category: "hiking", title: "Corona del Mar: Pirate's Cove & Bluffs", loc: "Corona del Mar State Beach, CA", done: false,
+        center: [33.593, -117.875], zoom: 15, insetCenter: [33.60, -117.88], insetZoom: 11, bounds: [[33.585, -117.890], [33.602, -117.860]],
+        itin: [
+          { pin: 1, name: "Inspiration Point Clifftop", time: "04:30 PM", desc: "Overlook harbor jetty & sailboats entering Newport channel at low tide.", lat: 33.5955, lng: -117.8720, role: "Bluff Vista" },
+          { pin: 2, name: "Pirate's Cove Sand Cleft", time: "05:45 PM", desc: "Descend stairs to sheltered cove beach flanked by natural sandstone reefs.", lat: 33.5930, lng: -117.8765, role: "Secluded Beach" },
+          { pin: 3, name: "The Quiet Woman Hearth", time: "07:15 PM", desc: "Crispy artichoke hearts, prime filet & live acoustic music in cozy booth.", lat: 33.5975, lng: -117.8685, role: "Hearth Supper", isNataliesPick: true }
+        ],
+        accomm: "Sunset Outing • 8 mi South of Irvine via MacArthur & PCH",
+        packing: { bag: "Leather Shoulder Tote", footwear: "Flat leather slides", layers: "Silk blouse & tailored evening denim" },
+        photo: "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=1200&q=80",
+        geo: "Ocean Blvd Bluffs & Newport Harbor Jetty"
+      },
+      {
+        num: "11", tier: 1, tierName: "< 1 Day", category: "galas", title: "Tarab & Velvet Nights Gala", loc: "Segerstrom Center for the Arts, Costa Mesa, CA", done: false,
+        center: [33.6915, -117.8835], zoom: 16, insetCenter: [33.67, -117.87], insetZoom: 11, bounds: [[33.680, -117.895], [33.702, -117.872]],
+        itin: [
+          { pin: 1, name: "Mastro's Corner Booth", time: "05:15 PM", desc: "Segerstrom valet; corner booth at Mastro's with warm butter cake split.", lat: 33.6892, lng: -117.8860, role: "Pre-Theater Supper" },
+          { pin: 2, name: "Box Circle Tier Row A", time: "07:45 PM", desc: "Kadim Al Sahir / Amr Diab orchestra apex; acoustic sightline center.", lat: 33.6925, lng: -117.8825, role: "Concert Anchor" },
+          { pin: 3, name: "Town Center Knafeh Lounge", time: "10:30 PM", desc: "Post-curtain warm cheese knafeh with crushed pistachio & orange blossom.", lat: 33.6885, lng: -117.8845, role: "Post-Curtain Treat", isNataliesPick: true }
+        ],
+        accomm: "Evening Outing • 5.2 mi West of Irvine via I-405 N to Bristol St",
+        packing: { bag: "Metallic Clutch", footwear: "Stiletto or block gold heels", layers: "Floor-length velvet evening gown & warm pashmina" },
+        photo: "https://images.unsplash.com/photo-1514565131-fce0801e5785?auto=format&fit=crop&w=1200&q=80",
+        geo: "Segerstrom Hall & Town Center Dr"
+      },
+      {
+        num: "12", tier: 1, tierName: "< 1 Day", category: "galas", title: "Vegas Arabian Nights Gala", loc: "The Venetian & Palazzo Ballroom, Las Vegas, NV", done: false,
+        center: [36.1215, -115.1685], zoom: 16, insetCenter: [36.12, -115.17], insetZoom: 11, bounds: [[36.105, -115.185], [36.135, -115.155]],
+        itin: [
+          { pin: 1, name: "estiatorio Milos", time: "06:00 PM", desc: "Milos whole Lavraki in salt crust; Palazzo Prestige private check-in bypass.", lat: 36.1238, lng: -115.1678, role: "Aegean Dining" },
+          { pin: 2, name: "Palazzo Grand Ballroom", time: "08:15 PM", desc: "Front-orchestra banquette table for Nancy Ajram / Wael Kfoury live gala.", lat: 36.1212, lng: -115.1690, role: "Musical Gala Anchor" },
+          { pin: 3, name: "Wakuda Strip Patio", time: "11:30 PM", desc: "Wakuda patio nightcap overlooking illuminated Strip & Bellagio lights.", lat: 36.1225, lng: -115.1670, role: "Rooftop Finale", isNataliesPick: true }
+        ],
+        accomm: "Budget: Linq ($90) | Safe: Palazzo ($240) | Luxury: Wynn Tower Suites ($650)",
+        packing: { bag: "Designer Evening Clutch", footwear: "Strappy evening heels", layers: "Structured metallic cocktail dress & gold jewelry" },
+        photo: "https://images.unsplash.com/photo-1581351721010-8cf859cb14a4?auto=format&fit=crop&w=1200&q=80",
+        geo: "Las Vegas Blvd & I-15 Corridor"
+      },
+      {
+        num: "13", tier: 1, tierName: "< 1 Day", category: "hiking", title: "San Clemente: Spanish Village & Pier", loc: "San Clemente Pier, CA", done: false,
+        center: [33.418, -117.618], zoom: 15, insetCenter: [33.43, -117.62], insetZoom: 11, bounds: [[33.405, -117.635], [33.430, -117.600]],
+        itin: [
+          { pin: 1, name: "San Clemente Beach Trail", time: "03:30 PM", desc: "Stroll 2.3-mile unpaved seaside path paralleling the train tracks & surf.", lat: 33.4220, lng: -117.6200, role: "Seaside Trail" },
+          { pin: 2, name: "Historic Wooden Pier", time: "05:15 PM", desc: "Walk to the pier terminus watching surfers catch peeling sets.", lat: 33.4185, lng: -117.6215, role: "Pier Terminus" },
+          { pin: 3, name: "The Fisherman's Restaurant", time: "06:30 PM", desc: "Dungeness crab cakes & sunset clam chowder over crashing breakers.", lat: 33.4190, lng: -117.6180, role: "Sunset Seafood", isNataliesPick: true }
+        ],
+        accomm: "Coastal Sunset Outing • 22 mi South of Irvine via I-5 South",
+        packing: { bag: "Canvas Beach Sack", footwear: "Comfortable espadrilles", layers: "Chunky knit cardigan for ocean breeze" },
+        photo: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
+        geo: "I-5 South & Avenida Del Mar"
+      },
+      {
+        num: "14", tier: 1, tierName: "< 1 Day", category: "galas", title: "Broadway Center Stage Gala", loc: "Hollywood Pantages Theatre / Segerstrom", done: false,
+        center: [34.1018, -118.3275], zoom: 16, insetCenter: [34.08, -118.33], insetZoom: 11, bounds: [[34.090, -118.345], [34.115, -118.310]],
+        itin: [
+          { pin: 1, name: "Musso & Frank Bistro", time: "05:00 PM", desc: "Pre-theater French bistro: steak frites, gougères, & vintage champagne toast.", lat: 34.1018, lng: -118.3353, role: "Historic Dinner" },
+          { pin: 2, name: "Pantages Center Orchestra", time: "07:30 PM", desc: "Center orchestra seats: The Lion King, Wicked, or Harry Potter.", lat: 34.1019, lng: -118.3255, role: "Stage Apex" },
+          { pin: 3, name: "Velvet Speakeasy Lounge", time: "10:45 PM", desc: "Craft speakeasy nightcap in velvet booth before smooth highway return.", lat: 34.1008, lng: -118.3285, role: "Nightcap Linger", isNataliesPick: true }
+        ],
+        accomm: "Evening Gala Outing • 44 mi Northwest of Irvine via I-5 N to US-101 N",
+        packing: { bag: "Black Silk Pouch", footwear: "Block heel pumps for theater stairs", layers: "Black silk slip dress & tailored tuxedo blazer" },
+        photo: "https://images.unsplash.com/photo-1460723237483-7a6dc9d0b212?auto=format&fit=crop&w=1200&q=80",
+        geo: "Hollywood Blvd & Pantages Proscenium"
+      },
+      {
+        num: "15", tier: 1, tierName: "< 1 Day", category: "hiking", title: "El Prieto Canyon Arroyo Rush", loc: "Gabrielino Trailhead, Altadena & Pasadena, CA", done: true,
+        center: [34.175, -118.165], zoom: 13, insetCenter: [34.16, -118.16], insetZoom: 11, bounds: [[34.135, -118.190], [34.215, -118.140]],
+        itin: [
+          { pin: 1, name: "Gabrielino Trailhead", time: "07:00 AM", desc: "Gabrielino Trailhead staging: shaded 4.2-mile oak singletrack along brook.", lat: 34.1953, lng: -118.1722, role: "Trailhead Launch" },
+          { pin: 2, name: "El Prieto Oak Crossing", time: "08:45 AM", desc: "Creek switchbacks through oak grove canopy; morning bird chorus.", lat: 34.2021, lng: -118.1654, role: "Brook Ascent" },
+          { pin: 3, name: "Pasadena Refresh Stop", time: "10:15 AM", desc: "Dedicated 45-minute hotel/home refresh buffer; sundress wardrobe transition.", lat: 34.1500, lng: -118.1550, role: "Refresh Buffer" },
+          { pin: 4, name: "Pasadena Courtyard Brunch", time: "11:15 AM", desc: "Old Town Pasadena courtyard brunch: chilaquiles & double espresso.", lat: 34.1458, lng: -118.1502, role: "Courtyard Feast", isNataliesPick: true }
+        ],
+        accomm: "Half-Day Outing • 48 mi Northwest of Irvine via I-5 N & CA-134 E",
+        packing: { bag: "Duffel with Sundress Change", footwear: "Lugged trail runners (pack slide sandals)", layers: "Technical trail set swap to floral linen dress" },
+        photo: "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=80",
+        geo: "San Gabriel Foothills & Arroyo Seco"
+      }
+    ];
+
+    // Systematic Population of Packages 16 through 100 with Realistic Destinations
+    const METRO_DESTINATIONS = [
+      // Tier 1 remaining (16-35)
+      { num: "16", cat: "hiking", title: "Bolsa Chica Wetlands: Dawn Heron Trail", loc: "Huntington Beach, CA", c: [33.702, -118.042] },
+      { num: "17", cat: "hiking", title: "Victoria Beach: Pirate Tower & Tide Pools", loc: "Laguna Beach, CA", c: [33.515, -117.768] },
+      { num: "18", cat: "hiking", title: "Dana Point Headlands: Ocean Overlook", loc: "Dana Point, CA", c: [33.460, -117.705] },
+      { num: "19", cat: "galas", title: "Los Rios Historic Quarter: Mission Garden", loc: "San Juan Capistrano, CA", c: [33.498, -117.665] },
+      { num: "20", cat: "hiking", title: "Palos Verdes: Point Vicente Whale Watch", loc: "Rancho Palos Verdes, CA", c: [33.743, -118.412] },
+      { num: "21", cat: "galas", title: "Terranea Ocean Bluffs: Sunset Hearth", loc: "Rancho Palos Verdes, CA", c: [33.738, -118.396] },
+      { num: "22", cat: "hiking", title: "Sunset Harbor Drift & Tapas", loc: "Newport Beach, CA", c: [33.612, -117.915] },
+      { num: "23", cat: "galas", title: "Walt Disney Concert Hall & Otium Supper", loc: "Downtown Los Angeles, CA", c: [34.055, -118.250] },
+      { num: "24", cat: "hiking", title: "Griffith Observatory: Sunset Alpenglow", loc: "Los Angeles, CA", c: [34.118, -118.300] },
+      { num: "25", cat: "hiking", title: "Santa Monica: Ocean Promenade & Pier", loc: "Santa Monica, CA", c: [34.010, -118.495] },
+      { num: "26", cat: "hiking", title: "Malibu: El Matador Sea Caves & Cove", loc: "Malibu, CA", c: [34.038, -118.875] },
+      { num: "27", cat: "galas", title: "Getty Villa: Roman Gardens & Amphitheatre", loc: "Pacific Palisades, CA", c: [34.045, -118.565] },
+      { num: "28", cat: "galas", title: "Huntington Library: Japanese Garden Stroll", loc: "San Marino, CA", c: [34.128, -118.115] },
+      { num: "29", cat: "hiking", title: "Torrey Pines: Guy Fleming Coastal Bluff", loc: "La Jolla, CA", c: [32.922, -117.255] },
+      { num: "30", cat: "hiking", title: "La Jolla Cove: Sea Caves & Seal Rookery", loc: "La Jolla, CA", c: [32.850, -117.272] },
+      { num: "31", cat: "galas", title: "Balboa Park: Prado Spanish Arcade Dinner", loc: "San Diego, CA", c: [32.734, -117.148] },
+      { num: "32", cat: "hiking", title: "Coronado Island: Silver Strand Sunset", loc: "Coronado, CA", c: [32.685, -117.182] },
+      { num: "33", cat: "hiking", title: "Julian Apple Country: Volcan Mountain", loc: "Julian, CA", c: [33.078, -116.602] },
+      { num: "34", cat: "hiking", title: "Anza-Borrego: Slot Canyon Desert Labyrinth", loc: "Borrego Springs, CA", c: [33.255, -116.375] },
+      { num: "35", cat: "weekend", title: "Temecula Valley: Sunrise Balloon Drift", loc: "Temecula, CA", c: [33.525, -117.075] },
+
+      // Tier 2: A Few Days (36-55)
+      { num: "36", cat: "weekend", title: "Temecula Valley: Private Cellar Retreat", loc: "Temecula Wine Country, CA", c: [33.535, -117.050] },
+      { num: "37", cat: "weekend", title: "Idyllwild: Granite Ridge & Hearth Cabin", loc: "Idyllwild, CA", c: [33.745, -116.715] },
+      { num: "38", cat: "weekend", title: "Catalina Island: Avalon Beach Cabana", loc: "Avalon, Catalina Island, CA", c: [33.342, -118.328] },
+      { num: "39", cat: "weekend", title: "Joshua Tree: Hidden Valley Starlight", loc: "Joshua Tree National Park, CA", c: [34.012, -116.168] },
+      { num: "40", cat: "weekend", title: "Palm Springs: Mid-Century Modernism", loc: "Palm Springs, CA", c: [33.830, -116.545] },
+      { num: "41", cat: "weekend", title: "Indian Canyons: Palm Canyon Oasis", loc: "Palm Springs, CA", c: [33.770, -116.535] },
+      { num: "42", cat: "weekend", title: "Big Bear Lake: Pine Haven & Castle Rock", loc: "Big Bear Lake, CA", c: [34.243, -116.911] },
+      { num: "43", cat: "weekend", title: "Lake Arrowhead: Lakefront Timber Lodge", loc: "Lake Arrowhead, CA", c: [34.258, -117.185] },
+      { num: "44", cat: "weekend", title: "Ojai Valley: Pink Moment Sunset Retreat", loc: "Ojai Valley, CA", c: [34.448, -119.242] },
+      { num: "45", cat: "weekend", title: "Yosemite Mach-E Valley Expedition", loc: "Yosemite National Park, CA", c: [37.740, -119.575], done: true },
+      { num: "46", cat: "weekend", title: "Mammoth Lakes: Minarets Alpenglow", loc: "Mammoth Lakes, CA", c: [37.648, -118.972] },
+      { num: "47", cat: "weekend", title: "June Lake Loop: Eastern Sierra Aspens", loc: "June Lake, CA", c: [37.778, -119.075] },
+      { num: "48", cat: "weekend", title: "Mono Lake Tufas & Bodie Ghost Town", loc: "Lee Vining, CA", c: [38.005, -119.010] },
+      { num: "49", cat: "weekend", title: "Sequoia & Kings: Giant Forest Monoliths", loc: "Sequoia National Park, CA", c: [36.565, -118.773] },
+      { num: "50", cat: "weekend", title: "Santa Barbara: American Riviera Arcades", loc: "Santa Barbara, CA", c: [34.420, -119.698] },
+      { num: "51", cat: "weekend", title: "Channel Islands: Santa Cruz Potato Harbor", loc: "Channel Islands National Park, CA", c: [34.050, -119.550] },
+      { num: "52", cat: "weekend", title: "Solvang & Santa Ynez: Foxen Pinot Trail", loc: "Santa Ynez Valley, CA", c: [34.595, -120.137] },
+      { num: "53", cat: "weekend", title: "Paso Robles: Tin City & Adelaida Hills", loc: "Paso Robles, CA", c: [35.626, -120.690] },
+      { num: "54", cat: "weekend", title: "Big Sur: Bixby Bridge & McWay Falls", loc: "Big Sur, CA", c: [36.270, -121.808] },
+      { num: "55", cat: "weekend", title: "Carmel-by-the-Sea: Fairy-Tale Courtyards", loc: "Carmel-by-the-Sea, CA", c: [36.555, -121.923] },
+
+      // Tier 3: 1 Week (56-75)
+      { num: "56", cat: "americas", title: "San Francisco & Marin: Headlands Drift", loc: "San Francisco & Sausalito, CA", c: [37.774, -122.419] },
+      { num: "57", cat: "americas", title: "Napa & Sonoma: Oakville Cabernet Terroir", loc: "Napa Valley, CA", c: [38.297, -122.286] },
+      { num: "58", cat: "americas", title: "Mendocino Coast: Victorian Saltbox Bluffs", loc: "Mendocino, CA", c: [39.307, -123.799] },
+      { num: "59", cat: "americas", title: "Lake Tahoe: Emerald Bay & Rubicon Trail", loc: "Lake Tahoe, CA/NV", c: [38.955, -119.950] },
+      { num: "60", cat: "americas", title: "Olympic National Park: Hoh Rain Forest", loc: "Olympic Peninsula, WA", c: [47.802, -123.604] },
+      { num: "61", cat: "americas", title: "Toronto & Niagara Falls Expedition", loc: "Toronto & Niagara, Canada", c: [43.648, -79.375], done: true },
+      { num: "62", cat: "americas", title: "Montreal & Old Quebec: Cobblestone Romance", loc: "Quebec, Canada", c: [45.501, -73.567] },
+      { num: "63", cat: "americas", title: "Peru: Sacred Valley & Machu Picchu Citadel", loc: "Cusco Region, Peru", c: [-13.163, -72.545] },
+      { num: "64", cat: "americas", title: "Brazil: Rio de Janeiro & Iguazú Falls", loc: "Rio & Iguazú, Brazil", c: [-22.986, -43.205] },
+      { num: "65", cat: "americas", title: "Argentina: Buenos Aires & Mendoza Terroir", loc: "Buenos Aires & Mendoza, Argentina", c: [-34.588, -58.392] },
+      { num: "66", cat: "americas", title: "Chile: Atacama Desert & Stargazing High", loc: "San Pedro de Atacama, Chile", c: [-22.908, -68.199] },
+      { num: "67", cat: "americas", title: "Costa Rica: Arenal Springs & Manuel Antonio", loc: "Arenal & Quepos, Costa Rica", c: [10.463, -84.703] },
+      { num: "68", cat: "americas", title: "Maui: Road to Hana & Haleakala Sunrise", loc: "Maui, Hawaii", c: [20.764, -156.002] },
+      { num: "69", cat: "americas", title: "Kauai: Na Pali Catamaran & Waimea Canyon", loc: "Kauai, Hawaii", c: [22.096, -159.526] },
+      { num: "70", cat: "americas", title: "Oahu: Lanikai Twin Mokes & North Shore", loc: "Oahu, Hawaii", c: [21.438, -158.000] },
+      { num: "71", cat: "americas", title: "Big Island: Kilauea Crater & Manta Rays", loc: "Hawaii Island, HI", c: [19.419, -155.288] },
+      { num: "72", cat: "americas", title: "Zion National Park: The Narrows & Angels", loc: "Springdale, UT", c: [37.202, -112.987] },
+      { num: "73", cat: "americas", title: "Bryce Canyon: Hoodoo Amphitheater Trail", loc: "Bryce Canyon, UT", c: [37.593, -112.187] },
+      { num: "74", cat: "americas", title: "Sedona: Cathedral Rock Vortex & Oak Creek", loc: "Sedona, AZ", c: [34.869, -111.760] },
+      { num: "75", cat: "americas", title: "Grand Canyon: South Rim Hermit Golden Hour", loc: "Grand Canyon Village, AZ", c: [36.054, -112.140] },
+
+      // Tier 4: 2 Weeks (76-90)
+      { num: "76", cat: "mediterranean", title: "Paris & Loire Valley: Seine & Châteaux", loc: "Paris & Amboise, France", c: [48.856, 2.352] },
+      { num: "77", cat: "mediterranean", title: "French Riviera & Provence: Èze to Nice", loc: "Côte d'Azur, France", c: [43.710, 7.262] },
+      { num: "78", cat: "mediterranean", title: "Swiss Alps: Zermatt Matterhorn & Valley", loc: "Valais & Bernese Oberland, Switzerland", c: [45.976, 7.749] },
+      { num: "79", cat: "mediterranean", title: "Italian Dolomites: Val di Funes & Tre Cime", loc: "South Tyrol, Italy", c: [46.643, 11.716] },
+      { num: "80", cat: "mediterranean", title: "Santorini & Cycladic Caldera", loc: "Imerovigli & Oia, Greece", c: [36.432, 25.422] },
+      { num: "81", cat: "mediterranean", title: "Armenia: Highlands & Mount Ararat Dawn", loc: "Yerevan & Khor Virap, Armenia", c: [39.878, 44.576] },
+      { num: "82", cat: "mediterranean", title: "Georgia: Tbilisi Old Baths & Kazbegi Peak", loc: "Tbilisi & Stepantsminda, Georgia", c: [41.715, 44.827] },
+      { num: "83", cat: "mediterranean", title: "Crete: Chania Venetian Port & Balos Lagoon", loc: "Crete, Greece", c: [35.513, 24.018] },
+      { num: "84", cat: "mediterranean", title: "Cyprus: Aphrodite's Coast & Akamas Lagoon", loc: "Paphos & Troodos, Cyprus", c: [34.850, 32.500] },
+      { num: "85", cat: "mediterranean", title: "Amalfi Coast & Capri: Positano Cliffside", loc: "Amalfi Coast, Italy", c: [40.628, 14.485] },
+      { num: "86", cat: "mediterranean", title: "Florence & Tuscany: Val d'Orcia Cypress", loc: "Tuscany, Italy", c: [43.769, 11.255] },
+      { num: "87", cat: "mediterranean", title: "Milan & Lake Como: Bellagio Villa Gardens", loc: "Lake Como, Italy", c: [45.986, 9.262] },
+      { num: "88", cat: "mediterranean", title: "Barcelona & Costa Brava: Calas Turquoise", loc: "Catalonia, Spain", c: [41.387, 2.170] },
+      { num: "89", cat: "mediterranean", title: "Mallorca: Deià Village & Tramuntana Coves", loc: "Balearic Islands, Spain", c: [39.695, 2.650] },
+      { num: "90", cat: "mediterranean", title: "Dubrovnik & Dalmatia: Hvar Lavender Isle", loc: "Dalmatian Coast, Croatia", c: [42.650, 18.094] },
+
+      // Tier 5: 3 Weeks (91-100)
+      { num: "91", cat: "transcontinental", title: "New Zealand: 21-Day South Island Kiwi Odyssey", loc: "South Island, New Zealand", c: [-44.950, 168.600] },
+      { num: "92", cat: "transcontinental", title: "Australia: Sydney Harbor, Reef & Red Centre", loc: "Sydney, Cairns & Uluru, Australia", c: [-33.868, 151.209] },
+      { num: "93", cat: "transcontinental", title: "Japan: Tokyo Neon, Kyoto Zen & Hakone Onsen", loc: "Honshu Island, Japan", c: [35.676, 139.650] },
+      { num: "94", cat: "transcontinental", title: "Grand Tour of Italy: Venice to Sicily", loc: "Italian Peninsula & Sicily", c: [41.902, 12.496] },
+      { num: "95", cat: "transcontinental", title: "UK & Scottish Highlands: Skye to Edinburgh", loc: "Scotland & England, UK", c: [55.953, -3.188] },
+      { num: "96", cat: "transcontinental", title: "Scandinavian Fjordland: Bergen to Geiranger", loc: "Western Fjords, Norway", c: [60.391, 5.322] },
+      { num: "97", cat: "transcontinental", title: "Iberian Odyssey: Madrid, Andalusia & Lisbon", loc: "Spain & Portugal", c: [40.416, -3.703] },
+      { num: "98", cat: "transcontinental", title: "South Africa: Cape Town, Winelands & Kruger", loc: "Western Cape & Kruger, South Africa", c: [-33.924, 18.424] },
+      { num: "99", cat: "transcontinental", title: "Arctic Lapland: Tromsø Auroras & Glass Igloos", loc: "Tromsø & Rovaniemi, Arctic", c: [69.649, 18.955] },
+      { num: "100", cat: "transcontinental", title: "Centennial World Heritage Apex: 21-Day Grand Finale", loc: "Multi-Continent Horizon Odyssey", c: [33.684, -117.826] }
+    ];
+
+    METRO_DESTINATIONS.forEach(item => {
+      let existing = PACKAGES.find(p => p.num === item.num);
+      if (!existing) {
+        let n = parseInt(item.num, 10);
+        let tier = 1, tierName = "< 1 Day";
+        if (n >= 36 && n <= 55) { tier = 2; tierName = "A Few Days"; }
+        else if (n >= 56 && n <= 75) { tier = 3; tierName = "1 Week"; }
+        else if (n >= 76 && n <= 90) { tier = 4; tierName = "2 Weeks"; }
+        else if (n >= 91) { tier = 5; tierName = "3 Weeks"; }
+
+        PACKAGES.push({
+          num: item.num,
+          tier: tier,
+          tierName: tierName,
+          category: item.cat,
+          title: item.title,
+          loc: item.loc,
+          done: !!item.done,
+          center: item.c,
+          zoom: tier === 1 ? 14 : (tier === 2 ? 12 : (tier === 3 ? 10 : 8)),
+          insetCenter: item.c,
+          insetZoom: tier === 1 ? 10 : 6,
+          bounds: [[item.c[0] - 0.05, item.c[1] - 0.05], [item.c[0] + 0.05, item.c[1] + 0.05]],
+          itin: [
+            { pin: 1, name: `${item.title.split(':')[0]} Staging`, time: "Morning Launch", desc: `Prompt morning staging from regional transit hub; route departure buffer.`, lat: item.c[0] - 0.015, lng: item.c[1] - 0.015, role: "Arrival Base" },
+            { pin: 2, name: `Core Panoramic Anchor`, time: "Midday Apex", desc: `Immersive exploration of key landmark; unhurried photo & contemplation pause.`, lat: item.c[0] + 0.012, lng: item.c[1] + 0.012, role: "Primary Anchor" },
+            { pin: 3, name: `Natalie's Curated Table`, time: "Evening Sunset", desc: `Pre-booked candlelit culinary dinner featuring authentic local delicacies & wine.`, lat: item.c[0] + 0.025, lng: item.c[1] - 0.010, role: "Culinary Climax", isNataliesPick: true }
+          ],
+          accomm: tier === 1 ? "Day Trip Excursion • Return to Irvine Home Base" : `Budget: Boutique B&B | Safe: Centrally Located 4-Star | Luxury: Five-Star Panoramic Suite`,
+          packing: {
+            bag: tier <= 2 ? "Weekender Leather Duffel" : "Lightweight Rolling Luggage + Daypack",
+            footwear: "Comfortable walking shoes + dress shoes for evening",
+            layers: "Breathable daytime layers + warm evening cardigan or wrap"
+          },
+          photo: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
+          geo: `Coordinated Sector Corridor • Staged relative to Irvine, CA`
+        });
+      }
+    });
+
+    PACKAGES.sort((a,b) => parseInt(a.num, 10) - parseInt(b.num, 10));
+
+    /* Master Slide Catalog: 117 Presentation Slides */
+    const SLIDES_CATALOG = [
+      { type: "cover", id: "cover", label: "001: Master Title Cover", category: "all" },
+      { type: "covenant", id: "covenant", label: "002: Covenant & 5 Duration Sections", category: "all" },
+      { type: "toc", tier: 1, id: "toc1", label: "003: TOC 01 (< 1 Day: Pkgs 01-35)", category: "all" },
+      { type: "dossier", tier: 1, id: "dossier1", label: "004: Curator's Dossier 01 (< 1 Day)", category: "all" },
+      ...PACKAGES.filter(p => p.tier === 1).map((p, i) => ({ type: "package", pkg: p, id: `pkg-${p.num}`, label: `${String(i + 5).padStart(3, '0')}: Pkg ${p.num} - ${p.title}`, category: p.category })),
+      { type: "divider", tier: 2, id: "div2", label: "040: Section 02 Divider (A Few Days)", category: "all" },
+      { type: "toc", tier: 2, id: "toc2", label: "041: TOC 02 (A Few Days: Pkgs 36-55)", category: "all" },
+      { type: "dossier", tier: 2, id: "dossier2", label: "042: Curator's Dossier 02 (A Few Days)", category: "all" },
+      ...PACKAGES.filter(p => p.tier === 2).map((p, i) => ({ type: "package", pkg: p, id: `pkg-${p.num}`, label: `${String(i + 43).padStart(3, '0')}: Pkg ${p.num} - ${p.title}`, category: p.category })),
+      { type: "divider", tier: 3, id: "div3", label: "063: Section 03 Divider (1 Week)", category: "all" },
+      { type: "toc", tier: 3, id: "toc3", label: "064: TOC 03 (1 Week: Pkgs 56-75)", category: "all" },
+      { type: "dossier", tier: 3, id: "dossier3", label: "065: Curator's Dossier 03 (1 Week)", category: "all" },
+      ...PACKAGES.filter(p => p.tier === 3).map((p, i) => ({ type: "package", pkg: p, id: `pkg-${p.num}`, label: `${String(i + 66).padStart(3, '0')}: Pkg ${p.num} - ${p.title}`, category: p.category })),
+      { type: "divider", tier: 4, id: "div4", label: "086: Section 04 Divider (2 Weeks)", category: "all" },
+      { type: "toc", tier: 4, id: "toc4", label: "087: TOC 04 (2 Weeks: Pkgs 76-90)", category: "all" },
+      { type: "dossier", tier: 4, id: "dossier4", label: "088: Curator's Dossier 04 (2 Weeks)", category: "all" },
+      ...PACKAGES.filter(p => p.tier === 4).map((p, i) => ({ type: "package", pkg: p, id: `pkg-${p.num}`, label: `${String(i + 89).padStart(3, '0')}: Pkg ${p.num} - ${p.title}`, category: p.category })),
+      { type: "divider", tier: 5, id: "div5", label: "104: Section 05 Divider (3 Weeks)", category: "all" },
+      { type: "toc", tier: 5, id: "toc5", label: "105: TOC 05 (3 Weeks: Pkgs 91-100)", category: "all" },
+      { type: "dossier", tier: 5, id: "dossier5", label: "106: Curator's Dossier 05 (3 Weeks)", category: "all" },
+      ...PACKAGES.filter(p => p.tier === 5).map((p, i) => ({ type: "package", pkg: p, id: `pkg-${p.num}`, label: `${String(i + 107).padStart(3, '0')}: Pkg ${p.num} - ${p.title}`, category: p.category })),
+      { type: "closing", id: "closing", label: "117: The Rob Khatchadourian Guarantee", category: "all" }
+    ];
+
+    let currentSlideIndex = 0;
+    let activeMaps = [];
+    let activeLeafletMarkers = {};
+
+    function cleanupMaps() {
+      if (activeMaps.length > 0) {
+        activeMaps.forEach(m => {
+          try {
+            m.off();
+            m.remove();
+          } catch(e) {
+            console.error("Map cleanup error:", e);
+          }
+        });
+        activeMaps = [];
+      }
+      activeLeafletMarkers = {};
+    }
+
+    const googleTileSubdomains = ['mt0', 'mt1', 'mt2', 'mt3'];
+    function getGoogleTileLayer(lyrs = 'm') {
+      const layer = L.tileLayer('https://{s}.google.com/vt/lyrs=' + lyrs + '&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: googleTileSubdomains,
+        attribution: '© Google Maps'
+      });
+      // Fallback on tile error to ESRI World Street Map to guarantee ZERO 403 blocks
+      layer.on('tileerror', function(error, tile) {
+        if (tile && !tile.__fallbackApplied) {
+          tile.__fallbackApplied = true;
+          const coords = error.coords;
+          if (coords) {
+            tile.src = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${coords.z}/${coords.y}/${coords.x}`;
+          }
+        }
+      });
+      return layer;
+    }
+
+    function switchMapLayer(mapInstance, lyrsType, btnGroup) {
+      if (!mapInstance) return;
+      mapInstance.eachLayer(layer => {
+        if (layer instanceof L.TileLayer) {
+          mapInstance.removeLayer(layer);
+        }
+      });
+      const newLayer = getGoogleTileLayer(lyrsType);
+      newLayer.addTo(mapInstance);
+      if (btnGroup) {
+        btnGroup.querySelectorAll('.map-layer-btn').forEach(b => {
+          b.classList.toggle('active', b.dataset.lyrs === lyrsType);
+        });
+      }
+    }
+
+    function makeCrimsonPinIcon(num) {
+      return L.divIcon({
+        className: 'custom-pin-wrapper',
+        html: `<div class="leaflet-crimson-pin" data-marker-num="${num}">${num}</div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+        tooltipAnchor: [0, -14]
+      });
+    }
+
+    function makeCityBadgeIcon(name, dir = 'right') {
+      let anchor = [2, 2];
+      if (dir === 'right') anchor = [2, 8];
+      if (dir === 'left') anchor = [80, 8];
+      if (dir === 'top') anchor = [40, 26];
+      if (dir === 'bottom') anchor = [40, 2];
+
+      return L.divIcon({
+        className: 'custom-city-wrapper',
+        html: `
+          <div class="city-callout-badge dir-${dir}">
+            <div class="city-dot"></div>
+            <div class="city-line"></div>
+            <div class="city-pill">${name}</div>
+          </div>
+        `,
+        iconSize: [120, 26],
+        iconAnchor: anchor
+      });
+    }
+
+    function renderActiveSlide() {
+      cleanupMaps();
+      const container = document.getElementById("dynamicSlideCanvas");
+      const current = SLIDES_CATALOG[currentSlideIndex];
+
+      document.getElementById("slideIndexLabel").textContent = `Slide ${currentSlideIndex + 1} of ${SLIDES_CATALOG.length}`;
+      document.getElementById("deckJumpSelector").value = currentSlideIndex;
+
+      // 1. Cover Slide
+      if (current.type === "cover") {
+        container.innerHTML = `
+          <div class="slide-topbar">
+            <span>GRAND EXPEDITION ANTHOLOGY • 100 CURATED ESCAPES</span>
+            <span>ROB KHATCHADOURIAN &amp; NATALIE KAPRELIAN</span>
+          </div>
+          <div class="slide-split-grid">
+            <div class="slide-text-col" style="justify-content: center; padding: 40px;">
+              <div class="pkg-kicker"><i class="fa-solid fa-compass"></i> Widescreen 16:9 Editorial Master Deck</div>
+              <h1 style="font-family: var(--font-serif); font-size: 38px; color: #FFF; line-height: 1.15; margin: 12px 0;">
+                The Khatcha-Kap<br><span style="color: var(--accent-terracotta);">Date Menu</span>
+              </h1>
+              <p style="color: var(--text-muted); font-size: 13px; line-height: 1.6; max-width: 440px;">
+                An intentional anthology of 100 romantic journeys prepared for Rob Khatchadourian &amp; Natalie Kaprelian. Calibrated from 2-hour morning ridge loops in Irvine to 21-day transcontinental expeditions.
+              </p>
+              <div style="margin-top: 24px; display: flex; gap: 10px;">
+                <button class="deck-btn accent-active" onclick="goToNextSlide()" style="padding:9px 18px;">
+                  START EXPLORING →
+                </button>
+                <button class="deck-btn" onclick="jumpToSlideKey('toc1')" style="padding:9px 14px;">
+                  <i class="fa-solid fa-list-ul"></i> TABLE OF CONTENTS
+                </button>
+              </div>
+            </div>
+            <div class="slide-media-col" style="height: 100%;">
+              <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80" alt="Pacific Coastline Morning Light" style="height: 100%; object-fit: cover;">
+              <div class="photo-caption-bar">
+                <span><strong>Crystal Cove &amp; Pacific Bluffs</strong> • Irvine Baseline Coordinates</span>
+                <span>100 Curated Itineraries</span>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // 2. Covenant Slide
+      if (current.type === "covenant") {
+        container.innerHTML = `
+          <div class="slide-topbar">
+            <span>EXPEDITION PROTOCOL • HOW TO NAVIGATE</span>
+            <span>THE GOLDEN COVENANT</span>
+          </div>
+          <div class="slide-split-grid">
+            <div class="slide-text-col" style="padding: 24px;">
+              <div>
+                <div class="pkg-kicker"><i class="fa-solid fa-shield-heart"></i> Operational Protocols</div>
+                <h2 class="pkg-heading" style="margin: 6px 0;">The Khatcha-Kap Covenant</h2>
+                <p style="font-size: 12px; color: var(--text-body); line-height: 1.5; margin-bottom: 12px;">
+                  This presentation eliminates decision fatigue. Every package is a concrete, executable experience with routes, reservations, and accommodations resolved by Rob.
+                </p>
+              </div>
+              <div class="itin-card-block">
+                <div class="itin-time-row">
+                  <span class="pin-badge">1</span>
+                  <div class="itin-time-badge">RULE 01</div>
+                  <div class="itin-time-desc"><strong>Zero Friction:</strong> Rob manages 100% of routes, reservations, vehicle prep, charging, and permits.</div>
+                </div>
+                <div class="itin-time-row">
+                  <span class="pin-badge">2</span>
+                  <div class="itin-time-badge">RULE 02</div>
+                  <div class="itin-time-desc"><strong>Trail-to-Table:</strong> Dedicated 40-minute refresh intervals or seaside rinses before fine dining.</div>
+                </div>
+                <div class="itin-time-row">
+                  <span class="pin-badge">3</span>
+                  <div class="itin-time-badge">RULE 03</div>
+                  <div class="itin-time-desc"><strong>Equal Agency:</strong> Natalie commands daily pace, pastry stops, mezze selections, and sunset cocktails.</div>
+                </div>
+              </div>
+            </div>
+            <div class="slide-text-col" style="padding: 24px; background: #18181C;">
+              <div class="pkg-kicker"><i class="fa-solid fa-layer-group"></i> The 5 Duration Sections</div>
+              <p style="font-size: 11px; color: var(--text-muted); font-style: italic; margin: 2px 0 6px 0; line-height: 1.4;">Click below to jump to each section</p>
+              <div style="display: flex; flex-direction: column; gap: 7px; margin-top: 4px;">
+                <div class="toc-clean-row" onclick="jumpToSlideKey('toc1')">
+                  <div class="toc-left-group">
+                    <span class="pin-badge toc-pin">01</span>
+                    <span class="toc-trip-title">Section 01: &lt; 1 Day (Half-Day Trails, Coast, Concerts)</span>
+                  </div>
+                  <span class="toc-venue-pill">Pkgs 01–35</span>
+                </div>
+                <div class="toc-clean-row" onclick="jumpToSlideKey('toc2')">
+                  <div class="toc-left-group">
+                    <span class="pin-badge toc-pin">36</span>
+                    <span class="toc-trip-title">Section 02: A Few Days (Sierra Rallies, Desert, Cabins)</span>
+                  </div>
+                  <span class="toc-venue-pill">Pkgs 36–55</span>
+                </div>
+                <div class="toc-clean-row" onclick="jumpToSlideKey('toc3')">
+                  <div class="toc-left-group">
+                    <span class="pin-badge toc-pin">56</span>
+                    <span class="toc-trip-title">Section 03: 1 Week (Andes, Hawaii, South America)</span>
+                  </div>
+                  <span class="toc-venue-pill">Pkgs 56–75</span>
+                </div>
+                <div class="toc-clean-row" onclick="jumpToSlideKey('toc4')">
+                  <div class="toc-left-group">
+                    <span class="pin-badge toc-pin">76</span>
+                    <span class="toc-trip-title">Section 04: 2 Weeks (Mediterranean, Cyclades, Armenia)</span>
+                  </div>
+                  <span class="toc-venue-pill">Pkgs 76–90</span>
+                </div>
+                <div class="toc-clean-row" onclick="jumpToSlideKey('toc5')">
+                  <div class="toc-left-group">
+                    <span class="pin-badge toc-pin">91</span>
+                    <span class="toc-trip-title">Section 05: 3 Weeks (Transcontinental &amp; Kiwi Odyssey)</span>
+                  </div>
+                  <span class="toc-venue-pill">Pkgs 91–100</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // 3. Section Divider Slides
+      if (current.type === "divider") {
+        const tierTitles = {
+          2: "A Few Days Away",
+          3: "One Week Expeditions",
+          4: "Two Week Grand Voyages",
+          5: "Three Week Transcontinental Odysseys"
+        };
+        const tierSubs = {
+          2: "Sierra Nevada Granite, High Passes, Desert Mid-Century Escapes & Coastal Valleys",
+          3: "Andean Sanctuaries, Brazilian Coastlines, Argentine Malbec & Great Lakes",
+          4: "Mediterranean Seascapes, Cycladic Calderas & Sacred Ancestral Heritage",
+          5: "21-Day Intercontinental Apex Escapes Across the South Pacific & Europe"
+        };
+        container.innerHTML = `
+          <div class="slide-topbar">
+            <span>SECTION 0${current.tier} ARCHITECTURAL FRAMEWORK</span>
+            <span>TIER ${current.tier} OVERVIEW</span>
+          </div>
+          <div class="slide-split-grid single-panel">
+            <div class="slide-text-col" style="justify-content: center; align-items: center; text-align: center; padding: 60px;">
+              <div class="pkg-kicker" style="justify-content: center;"><i class="fa-solid fa-compass"></i> Tier 0${current.tier} • Curated Anthology</div>
+              <h1 style="font-family: var(--font-serif); font-size: 36px; color: #FFF; line-height: 1.2; margin: 16px 0;">
+                ${tierTitles[current.tier]}
+              </h1>
+              <p style="color: var(--text-muted); font-size: 14px; line-height: 1.6; max-width: 560px;">
+                ${tierSubs[current.tier]}
+              </p>
+              <div style="margin-top: 24px; display: flex; gap: 12px;">
+                <button class="deck-btn accent-active" onclick="goToNextSlide()" style="padding:8px 18px;">
+                  VIEW TABLE OF CONTENTS &rarr;
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // 4. TOC Slides with 3-Panel Google Maps
+      if (current.type === "toc") {
+        const tierPkgs = PACKAGES.filter(p => p.tier === current.tier);
+        const rowsHtml = tierPkgs.map(p => `
+          <div class="toc-clean-row" data-pkg-num="${p.num}" onclick="jumpToSlideKey('pkg-${p.num}')">
+            <div class="toc-left-group">
+              <span class="pin-badge toc-pin">${p.num}</span>
+              <span class="toc-trip-title">${p.title}</span>
+            </div>
+            ${p.done ? '<span class="toc-green-done"><i class="fa-solid fa-circle-check"></i></span>' : `<span class="toc-venue-pill">${p.loc.split(',')[0]}</span>`}
+          </div>
+        `).join("");
+
+        container.innerHTML = `
+          <div class="slide-topbar">
+            <span>TABLE OF CONTENTS • TIER ${current.tier}: ${tierPkgs[0].tierName}</span>
+            <span><span style="color:var(--green-check);"><i class="fa-solid fa-circle-check"></i> = COMPLETED TOGETHER</span></span>
+          </div>
+          <div class="slide-split-grid">
+            <div class="toc-table-flow">
+              ${rowsHtml}
+            </div>
+            <div class="toc-multipanel-osm-container">
+              <!-- Top Panel: The West -->
+              <div class="toc-panel-west-box">
+                <span class="panel-black-header-pill">The West</span>
+                <div class="map-layer-switcher" id="switcherTocWest">
+                  <button class="map-layer-btn active" data-lyrs="m">Road</button>
+                  <button class="map-layer-btn" data-lyrs="p">Terrain</button>
+                  <button class="map-layer-btn" data-lyrs="y">Sat</button>
+                </div>
+                <div id="mapTocWest" style="width:100%; height:100%;"></div>
+              </div>
+              <!-- Bottom Row: Hawaii & Toronto -->
+              <div class="toc-panel-bottom-row">
+                <div class="toc-subpanel-box">
+                  <span class="panel-black-header-pill">Hawaii</span>
+                  <div class="map-layer-switcher" id="switcherTocHawaii">
+                    <button class="map-layer-btn active" data-lyrs="m">Road</button>
+                    <button class="map-layer-btn" data-lyrs="p">Terrain</button>
+                    <button class="map-layer-btn" data-lyrs="y">Sat</button>
+                  </div>
+                  <div id="mapTocHawaii" style="width:100%; height:100%;"></div>
+                </div>
+                <div class="toc-subpanel-box">
+                  <span class="panel-black-header-pill">Toronto</span>
+                  <div class="map-layer-switcher" id="switcherTocToronto">
+                    <button class="map-layer-btn active" data-lyrs="m">Road</button>
+                    <button class="map-layer-btn" data-lyrs="p">Terrain</button>
+                    <button class="map-layer-btn" data-lyrs="y">Sat</button>
+                  </div>
+                  <div id="mapTocToronto" style="width:100%; height:100%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        setTimeout(() => {
+          // Initialize The West
+          const mapWest = L.map('mapTocWest', { zoomControl: false, attributionControl: false }).setView([36.2, -117.5], 5);
+          activeMaps.push(mapWest);
+          const layerWest = getGoogleTileLayer('m');
+          layerWest.addTo(mapWest);
+
+          const swWest = document.getElementById('switcherTocWest');
+          if (swWest) {
+            swWest.querySelectorAll('.map-layer-btn').forEach(btn => {
+              btn.addEventListener('click', () => switchMapLayer(mapWest, btn.dataset.lyrs, swWest));
+            });
+          }
+
+          L.marker([37.7749, -122.4194], { icon: makeCityBadgeIcon('San Francisco', 'left') }).addTo(mapWest);
+          L.marker([36.1699, -115.1398], { icon: makeCityBadgeIcon('Las Vegas', 'top') }).addTo(mapWest);
+          L.marker([33.6846, -117.8265], { icon: makeCityBadgeIcon('Irvine [Home Base]', 'right') }).addTo(mapWest);
+          L.marker([32.7157, -117.1611], { icon: makeCityBadgeIcon('San Diego', 'right') }).addTo(mapWest);
+
+          const westPins = [
+            { num: '01', lat: 33.5612, lng: -117.8354, name: 'Laguna Beach: Ridge & Reef' },
+            { num: '06', lat: 33.6548, lng: -117.7892, name: 'Quail Hill Sage Scrub' },
+            { num: '11', lat: 33.6925, lng: -117.8825, name: 'Tarab & Velvet Nights' },
+            { num: '12', lat: 36.1212, lng: -115.1690, name: 'Vegas Arabian Nights' },
+            { num: '14', lat: 34.1019, lng: -118.3255, name: 'Broadway Center Stage' },
+            { num: '15', lat: 34.1953, lng: -118.1722, name: 'El Prieto Canyon Rush' },
+            { num: '22', lat: 33.6152, lng: -117.9275, name: 'Sunset Harbor Drift' },
+            { num: '45', lat: 37.7380, lng: -119.5730, name: 'Yosemite Mach-E Valley' },
+            { num: '50', lat: 34.4208, lng: -119.6982, name: 'Santa Barbara Riviera' },
+            { num: '52', lat: 34.5958, lng: -120.1376, name: 'Solvang & Santa Ynez' }
+          ];
+
+          westPins.forEach(p => {
+            const m = L.marker([p.lat, p.lng], { icon: makeCrimsonPinIcon(p.num) }).addTo(mapWest);
+            m.bindTooltip(`<strong>Package ${p.num}: ${p.name}</strong>`, { className: 'osm-clean-tooltip', direction: 'top' });
+            activeLeafletMarkers[p.num] = m;
+          });
+
+          // Initialize Hawaii
+          const mapHawaii = L.map('mapTocHawaii', { zoomControl: false, attributionControl: false }).setView([20.82, -156.35], 9);
+          activeMaps.push(mapHawaii);
+          const layerHawaii = getGoogleTileLayer('m');
+          layerHawaii.addTo(mapHawaii);
+          const swHawaii = document.getElementById('switcherTocHawaii');
+          if (swHawaii) {
+            swHawaii.querySelectorAll('.map-layer-btn').forEach(btn => {
+              btn.addEventListener('click', () => switchMapLayer(mapHawaii, btn.dataset.lyrs, swHawaii));
+            });
+          }
+          L.marker([20.8893, -156.4729], { icon: makeCityBadgeIcon('Kahului', 'top') }).addTo(mapHawaii);
+          const m68 = L.marker([20.764, -156.002], { icon: makeCrimsonPinIcon('68') }).addTo(mapHawaii);
+          m68.bindTooltip(`<strong>Package 68: Maui Hana & Haleakala</strong>`, { className: 'osm-clean-tooltip', direction: 'top' });
+          activeLeafletMarkers['68'] = m68;
+
+          // Initialize Toronto
+          const mapToronto = L.map('mapTocToronto', { zoomControl: false, attributionControl: false }).setView([43.65, -79.38], 9);
+          activeMaps.push(mapToronto);
+          const layerToronto = getGoogleTileLayer('m');
+          layerToronto.addTo(mapToronto);
+          const swToronto = document.getElementById('switcherTocToronto');
+          if (swToronto) {
+            swToronto.querySelectorAll('.map-layer-btn').forEach(btn => {
+              btn.addEventListener('click', () => switchMapLayer(mapToronto, btn.dataset.lyrs, swToronto));
+            });
+          }
+          L.marker([43.6532, -79.3832], { icon: makeCityBadgeIcon('Toronto', 'right') }).addTo(mapToronto);
+          const m61 = L.marker([43.6487, -79.3715], { icon: makeCrimsonPinIcon('61') }).addTo(mapToronto);
+          m61.bindTooltip(`<strong>Package 61: Toronto & Niagara Falls</strong>`, { className: 'osm-clean-tooltip', direction: 'top' });
+          activeLeafletMarkers['61'] = m61;
+
+          setTimeout(() => {
+            [mapWest, mapHawaii, mapToronto].forEach(m => m.invalidateSize());
+          }, 80);
+
+          attachTocHoverSync();
+        }, 80);
+        return;
+      }
+
+      // 5. Curator Dossier Slides
+      if (current.type === "dossier") {
+        container.innerHTML = `
+          <div class="slide-topbar">
+            <span>EXPERT DOSSIER • TIER 0${current.tier} BRIEFING</span>
+            <span>CURATOR'S ARCHITECTURAL STRATEGY</span>
+          </div>
+          <div class="slide-split-grid single-panel">
+            <div class="dossier-grid">
+              <div class="dossier-card">
+                <span class="dossier-card-tag"><i class="fa-solid fa-wave-square"></i> 1. The Trip Shape</span>
+                <p class="dossier-card-headline">Pacing &amp; Anchor-Orbit Rhythm</p>
+                <p>Weekend and multi-day escapes fail when they mimic compressed vacations. Our rule of thirds guarantees 1 high-exertion anchor, 2 flexible floats, and dedicated 3-hour unscripted pause windows.</p>
+                <p>Avoid compression fatigue; prioritize golden hour arrivals, unhurried check-ins, and dedicated recovery periods before return drives.</p>
+              </div>
+              <div class="dossier-card">
+                <span class="dossier-card-tag"><i class="fa-solid fa-bed"></i> 2. Lodging &amp; Area</span>
+                <p class="dossier-card-headline">Base Location Rationale &amp; Trade-Offs</p>
+                <p>Always stay inside national park boundaries and central historic quarters. Driving 90 minutes each way from gateway towns kills romantic spontaneity, despite newer bathrooms.</p>
+                <p>Three verified tiers: Budget (Flexible), Nice/Safe/Convenient, and Luxury. In-park lodging preserves sunrise trailheads before crowds arrive.</p>
+              </div>
+              <div class="dossier-card">
+                <span class="dossier-card-tag"><i class="fa-solid fa-compass"></i> 3. The Local Read</span>
+                <p class="dossier-card-headline">Worth It vs. Skip</p>
+                <p><strong>Worth It:</strong> Private early-morning catamaran sails, rim tailgate picnics at alpenglow, and 06:15 AM dawn departures on empty pass tarmac.</p>
+                <p><strong>Skip:</strong> Formal hotel dining rooms, crowded commercial tour buses, and crowded sunset lookout spots with coach tours.</p>
+              </div>
+              <div class="dossier-card">
+                <span class="dossier-card-tag"><i class="fa-solid fa-bolt"></i> 4. Weather &amp; Booking Anchors</span>
+                <p class="dossier-card-headline">Lead Times, EV Fast Charging &amp; Attire Protocols</p>
+                <p>Critical booking windows: National Park in-park lodging 366 days ahead; Michelin tasting tables 90 days out; private boat charters 5 months prior.</p>
+                <p>Ford Mustang Mach-E DC fast charging mapped at route transitions; Level 2 overnight charging topped to 100% state of charge.</p>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // 6. Individual Date Package Slides
+      if (current.type === "package") {
+        const p = current.pkg;
+        
+        const itinRows = p.itin.map(item => `
+          <div class="itin-time-row" data-itin-pin="${item.pin}">
+            <span class="pin-badge">${item.pin}</span>
+            <div class="itin-time-badge">${item.time}</div>
+            <div class="itin-time-desc">
+              <span class="itin-stop-title">${item.name}:</span>
+              <span>${item.desc}</span>
+              ${item.isNataliesPick ? '<span class="natalie-choice-pill"><i class="fa-solid fa-star"></i> Natalie\'s Choice</span>' : ''}
+            </div>
+          </div>
+        `).join("");
+
+        const gmapsLink = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.loc)}&travelmode=driving`;
+
+        container.innerHTML = `
+          <div class="slide-topbar">
+            <span>TIER ${p.tier} • ${p.tierName} • PACKAGE ${p.num} OF 100</span>
+            <span>${p.done ? '<strong style="color:var(--green-check);"><i class="fa-solid fa-circle-check"></i> COMPLETED TOGETHER</strong>' : '<strong>PROSPECTIVE ESCAPE</strong>'}</span>
+          </div>
+          <div class="slide-split-grid">
+            <div class="slide-text-col">
+              <div>
+                <div class="pkg-kicker"><i class="fa-solid fa-map-pin"></i> Package ${p.num} • ${p.tierName}</div>
+                <h2 class="pkg-heading">${p.title}</h2>
+                <div class="pkg-location-strip">
+                  <span><i class="fa-solid fa-location-dot"></i> <a href="https://maps.google.com/?q=${encodeURIComponent(p.loc)}" target="_blank">${p.loc}</a></span>
+                  <a href="${gmapsLink}" target="_blank" class="gmaps-direct-btn"><i class="fa-solid fa-diamond-turn-right"></i> Open in Google Maps</a>
+                </div>
+              </div>
+
+              <!-- Itinerary Steps with Circular Crimson Badges -->
+              <div class="itin-card-block">
+                ${itinRows}
+              </div>
+
+              <div class="accomm-card-block">
+                <span class="accomm-label"><i class="fa-solid fa-bed"></i> Accommodations &amp; Logistics:</span>
+                <div>${p.accomm}</div>
+              </div>
+
+              <!-- Refined Attire & Essentials Section -->
+              <div class="packing-cheat-block">
+                <div style="font-family: var(--font-mono); font-size: 8.5px; color: var(--accent-terracotta); font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">
+                  <i class="fa-solid fa-shirt"></i> Attire &amp; Essentials
+                </div>
+                <div><strong>Bag:</strong> ${p.packing.bag} &bull; <strong>Footwear:</strong> ${p.packing.footwear}</div>
+                <div><strong>Layers &amp; Style:</strong> ${p.packing.layers}</div>
+              </div>
+            </div>
+
+            <!-- Media Column: Verified Photo + Leaflet Google Maps Viewport + Floating Corner Inset -->
+            <div class="slide-media-col">
+              <div class="photo-split-half">
+                <img src="${p.photo}" alt="${p.title}" onerror="this.src='https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80'">
+                <div class="photo-caption-bar">
+                  <span><strong>${p.title}</strong></span>
+                  <span>${p.geo}</span>
+                </div>
+              </div>
+
+              <div class="map-split-half">
+                <div class="map-layer-switcher" id="switcherMainMap">
+                  <button class="map-layer-btn active" data-lyrs="m">Road</button>
+                  <button class="map-layer-btn" data-lyrs="p">Terrain</button>
+                  <button class="map-layer-btn" data-lyrs="y">Satellite</button>
+                </div>
+
+                <div id="leafletMainMap" class="leaflet-viewport-main"></div>
+
+                <div class="osm-floating-inset-box">
+                  <div id="leafletInsetMap" class="leaflet-viewport-inset"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        setTimeout(() => {
+          // Initialize Main Leaflet Google Map
+          const mainMap = L.map('leafletMainMap', { zoomControl: false, attributionControl: true }).setView(p.center, p.zoom);
+          activeMaps.push(mainMap);
+          const layerMain = getGoogleTileLayer('m');
+          layerMain.addTo(mainMap);
+
+          const swMain = document.getElementById('switcherMainMap');
+          if (swMain) {
+            swMain.querySelectorAll('.map-layer-btn').forEach(btn => {
+              btn.addEventListener('click', () => switchMapLayer(mainMap, btn.dataset.lyrs, swMain));
+            });
+          }
+
+          const latlngs = [];
+          p.itin.forEach(stop => {
+            const marker = L.marker([stop.lat, stop.lng], { icon: makeCrimsonPinIcon(stop.pin) }).addTo(mainMap);
+            marker.bindTooltip(`<strong>Stop ${stop.pin}: ${stop.name}</strong><br><span style="color:#A1A1AA; font-size:9.5px;">${stop.time}</span>`, {
+              className: 'osm-clean-tooltip',
+              direction: 'top'
+            });
+            activeLeafletMarkers[stop.pin] = marker;
+            latlngs.push([stop.lat, stop.lng]);
+          });
+
+          if (latlngs.length > 1) {
+            L.polyline(latlngs, {
+              color: '#C23B2B',
+              weight: 2.5,
+              dashArray: '5, 5',
+              opacity: 0.85
+            }).addTo(mainMap);
+          }
+
+          // Initialize Floating Corner Inset Map
+          const insetMap = L.map('leafletInsetMap', { zoomControl: false, attributionControl: false }).setView(p.insetCenter, p.insetZoom);
+          activeMaps.push(insetMap);
+          const layerInset = getGoogleTileLayer('m');
+          layerInset.addTo(insetMap);
+
+          if (p.tier <= 2 || p.loc.includes("CA") || p.loc.includes("Laguna") || p.loc.includes("Newport")) {
+            L.marker([33.6846, -117.8265], { icon: makeCityBadgeIcon('Irvine', 'right') }).addTo(insetMap);
+            L.marker([33.6189, -117.9289], { icon: makeCityBadgeIcon('Newport Beach', 'left') }).addTo(insetMap);
+            L.marker([33.5427, -117.7854], { icon: makeCityBadgeIcon('Laguna Beach', 'right') }).addTo(insetMap);
+          } else {
+            L.marker(p.insetCenter, { icon: makeCityBadgeIcon(p.loc.split(',')[0], 'top') }).addTo(insetMap);
+          }
+
+          L.rectangle(p.bounds, {
+            color: '#C23B2B',
+            weight: 2,
+            fillColor: '#C23B2B',
+            fillOpacity: 0.18
+          }).addTo(insetMap);
+
+          setTimeout(() => {
+            mainMap.invalidateSize();
+            insetMap.invalidateSize();
+          }, 80);
+
+          attachPackageHoverSync();
+        }, 80);
+        return;
+      }
+
+      // 7. Closing Guarantee Slide
+      if (current.type === "closing") {
+        container.innerHTML = `
+          <div class="slide-topbar">
+            <span>THE ROB KHATCHADOURIAN EXPERIENCE GUARANTEE • CENTENNIAL HORIZON</span>
+            <span>ROB &amp; NATALIE COVENANT</span>
+          </div>
+          <div class="slide-split-grid">
+            <div class="slide-text-col" style="justify-content: center; padding: 40px;">
+              <div class="pkg-kicker"><i class="fa-solid fa-handshake"></i> Unconditional Promise</div>
+              <h2 style="font-family: var(--font-serif); font-size: 32px; color: #FFF; line-height: 1.2; margin: 10px 0;">
+                Table for Two:<br><span style="color: var(--accent-terracotta);">The Rob Khatchadourian Guarantee</span>
+              </h2>
+              <p style="font-size: 13px; color: var(--text-body); line-height: 1.6; margin-bottom: 16px;">
+                From a 2-hour morning loop at Quail Hill to a 21-day flight expedition through the South Island fiords of New Zealand, Natalie never has to worry about maps, route timing, hotel confirmations, or rental logistics.
+              </p>
+              <div class="itin-card-block">
+                <div class="itin-time-row">
+                  <span class="pin-badge">1</span>
+                  <div class="itin-time-badge">LOGISTICS</div>
+                  <div class="itin-time-desc">100% of flights, high-speed rail, ferry bookings, and vehicle charging planned ahead.</div>
+                </div>
+                <div class="itin-time-row">
+                  <span class="pin-badge">2</span>
+                  <div class="itin-time-badge">DINING</div>
+                  <div class="itin-time-desc">Pre-booked tables with views, prime patio seating, and authentic local bakeries.</div>
+                </div>
+                <div class="itin-time-row">
+                  <span class="pin-badge">3</span>
+                  <div class="itin-time-badge">EXPERIENCE</div>
+                  <div class="itin-time-desc">Natalie's only responsibility is to show up, relax, and savor the moment together.</div>
+                </div>
+              </div>
+            </div>
+            <div class="slide-media-col" style="height: 100%;">
+              <img src="https://images.unsplash.com/photo-1495954484750-af469f2f9be5?auto=format&fit=crop&w=1200&q=80" alt="Pacific Sunset Horizon" style="height: 100%; object-fit: cover;">
+              <div class="photo-caption-bar">
+                <span><strong>Pacific Coast Golden Hour</strong> • Irvine Horizon</span>
+                <span>Rob &amp; Natalie</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function attachPackageHoverSync() {
+      const itinRows = document.querySelectorAll(".itin-time-row[data-itin-pin]");
+      itinRows.forEach(row => {
+        const pinId = row.getAttribute("data-itin-pin");
+        row.addEventListener("mouseenter", () => {
+          row.classList.add("active-hover");
+          const marker = activeLeafletMarkers[pinId];
+          if (marker) {
+            marker.openTooltip();
+            const el = marker.getElement();
+            if (el) {
+              const pin = el.querySelector(".leaflet-crimson-pin");
+              if (pin) pin.classList.add("active-highlight");
+            }
+          }
+        });
+        row.addEventListener("mouseleave", () => {
+          row.classList.remove("active-hover");
+          const marker = activeLeafletMarkers[pinId];
+          if (marker) {
+            marker.closeTooltip();
+            const el = marker.getElement();
+            if (el) {
+              const pin = el.querySelector(".leaflet-crimson-pin");
+              if (pin) pin.classList.remove("active-highlight");
+            }
+          }
+        });
+      });
+    }
+
+    function attachTocHoverSync() {
+      const tocRows = document.querySelectorAll(".toc-clean-row[data-pkg-num]");
+      tocRows.forEach(row => {
+        const pkgNum = row.getAttribute("data-pkg-num");
+        row.addEventListener("mouseenter", () => {
+          row.classList.add("active-hover");
+          const marker = activeLeafletMarkers[pkgNum];
+          if (marker) {
+            marker.openTooltip();
+            const el = marker.getElement();
+            if (el) {
+              const pin = el.querySelector(".leaflet-crimson-pin");
+              if (pin) pin.classList.add("active-highlight");
+            }
+          }
+        });
+        row.addEventListener("mouseleave", () => {
+          row.classList.remove("active-hover");
+          const marker = activeLeafletMarkers[pkgNum];
+          if (marker) {
+            marker.closeTooltip();
+            const el = marker.getElement();
+            if (el) {
+              const pin = el.querySelector(".leaflet-crimson-pin");
+              if (pin) pin.classList.remove("active-highlight");
+            }
+          }
+        });
+      });
+    }
+
+    function initJumpSelector(filteredList = SLIDES_CATALOG) {
+      const select = document.getElementById("deckJumpSelector");
+      select.innerHTML = "";
+      filteredList.forEach(slide => {
+        const globalIdx = SLIDES_CATALOG.indexOf(slide);
+        const opt = document.createElement("option");
+        opt.value = globalIdx;
+        opt.textContent = slide.label;
+        select.appendChild(opt);
+      });
+    }
+
+    function applyCategoryFilter(cat) {
+      if (cat === "all") {
+        initJumpSelector(SLIDES_CATALOG);
+        return;
+      }
+      let filtered = [];
+      if (cat === "completed") {
+        filtered = SLIDES_CATALOG.filter(s => s.pkg && s.pkg.done);
+      } else {
+        filtered = SLIDES_CATALOG.filter(s => s.category === cat || (s.pkg && s.pkg.category === cat));
+      }
+      initJumpSelector(filtered.length > 0 ? filtered : SLIDES_CATALOG);
+      if (filtered.length > 0) {
+        navigateToSlideIndex(SLIDES_CATALOG.indexOf(filtered[0]));
+      }
+    }
+
+    function jumpToSlideKey(id) {
+      const idx = SLIDES_CATALOG.findIndex(s => s.id === id);
+      if (idx !== -1) navigateToSlideIndex(idx);
+    }
+
+    function navigateToSlideIndex(idx) {
+      currentSlideIndex = Math.max(0, Math.min(SLIDES_CATALOG.length - 1, parseInt(idx, 10)));
+      renderActiveSlide();
+    }
+
+    function goToNextSlide() {
+      if (currentSlideIndex < SLIDES_CATALOG.length - 1) {
+        currentSlideIndex++;
+        renderActiveSlide();
+      }
+    }
+
+    function goToPrevSlide() {
+      if (currentSlideIndex > 0) {
+        currentSlideIndex--;
+        renderActiveSlide();
+      }
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().then(() => {
+          document.body.classList.add("is-fullscreen");
+        }).catch(err => {
+          console.error("Fullscreen error:", err);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().then(() => {
+            document.body.classList.remove("is-fullscreen");
+          });
+        }
+      }
+    }
+
+    document.addEventListener("fullscreenchange", () => {
+      document.body.classList.toggle("is-fullscreen", !!document.fullscreenElement);
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight" || e.key === " ") {
+        e.preventDefault();
+        goToNextSlide();
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        goToPrevSlide();
+      } else if (e.key === "f" || e.key === "F") {
+        toggleFullscreen();
+      }
+    });
+
+    // Boot Presentation Application
+    initJumpSelector();
+    renderActiveSlide();
+  </script>
+</body>
+</html>
